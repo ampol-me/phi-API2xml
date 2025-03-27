@@ -11,7 +11,7 @@ const fetchDataFromAPI = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9',
+        'Bosch-Sid': '041186302e679c5baeecb4bd4f123d2bca71217e2b7c365cc2e0f177b3698a151d53bdc81af99456a91dd4a66b3ca875b591b4957d1b2db6f22dd42151ddb6a3',
       },
     });
     return response.data;
