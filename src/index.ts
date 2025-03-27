@@ -112,9 +112,6 @@ let previousData = [];
 
 setInterval(async () => {
   const currentData = await fetchDataFromAPI();
-
-  console.log(currentData);
-
   // ถ้ามีการเปลี่ยนแปลงข้อมูล
   if (JSON.stringify(currentData) !== JSON.stringify(previousData)) {
     console.log('Data updated:', currentData);
