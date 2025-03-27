@@ -7,18 +7,47 @@ const TCP_PORT = 20000;
 const HTTP_PORT = 3000;
 const clients: net.Socket[] = [];
 
+
+const getRandomSeats = () => {
+  const seatCount = Math.floor(Math.random() * 2) + 1; // 1-2 seats
+  const seats = [];
+  for (let i = 0; i < seatCount; i++) {
+    const seatId = Math.floor(Math.random() * 10) + 1; // Seat 1-10
+    seats.push({
+      name: `Seat ${seatId}`,
+      prio: false,
+      prioOn: false,
+      seatName: `Seat ${seatId}`,
+      micOn: Math.random() < 0.5,
+      id: seatId,
+      participantId: Math.floor(Math.random() * 100000)
+    });
+  }
+  return seats;
+};
+
+let mockData = getRandomSeats();
+
+setInterval(() => {
+  mockData = getRandomSeats();
+  console.log('Updated mockData:', mockData);
+}, 5000);
+
 // ดึงข้อมูลจาก API
 const fetchDataFromAPI = async () => {
   try {
-    const response = await axios.get('http://10.115.206.10/api/speakers', {
-      headers: {
-        'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
-      },
-    });
+    const response = await Promise.race([
+      axios.get('http://10.115.206.10/api/speakers', {
+        headers: {
+          'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
+        },
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
+    ]);
     return response.data;
   } catch (error) {
     console.error('❌ Error fetching data:', error);
-    return [];
+    return mockData;
   }
 };
 
