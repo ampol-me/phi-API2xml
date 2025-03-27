@@ -2,12 +2,37 @@ import { Elysia } from 'elysia';
 import axios from 'axios';
 import xml from 'xml';
 
+const getRandomSeats = () => {
+  const seatCount = Math.floor(Math.random() * 2) + 1; // 1-2 seats
+  const seats = [];
+  for (let i = 0; i < seatCount; i++) {
+    const seatId = Math.floor(Math.random() * 10) + 1; // Seat 1-10
+    seats.push({
+      name: `Seat ${seatId}`,
+      prio: false,
+      prioOn: false,
+      seatName: `Seat ${seatId}`,
+      micOn: Math.random() < 0.5,
+      id: seatId,
+      participantId: Math.floor(Math.random() * 100000)
+    });
+  }
+  return seats;
+};
+
+let mockData = getRandomSeats();
+
+setInterval(() => {
+  mockData = getRandomSeats();
+  console.log('Updated mockData:', mockData);
+}, 5000);
+
 // ดึงข้อมูลจาก API
 const fetchDataFromAPI = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9',
+        'Bosch-Sid': 'dc393fe11b74796acb422be783d021d471c357bc997e17c289e9962a1292c9ef2b53106888e70dd43e72284be1b4bec96e3ce330c6caebc952f5ebf61d0e359f',
       },
     });
     return response.data;
@@ -88,6 +113,8 @@ let previousData = [];
 setInterval(async () => {
   const currentData = await fetchDataFromAPI();
 
+  console.log(currentData);
+
   // ถ้ามีการเปลี่ยนแปลงข้อมูล
   if (JSON.stringify(currentData) !== JSON.stringify(previousData)) {
     console.log('Data updated:', currentData);
@@ -97,10 +124,10 @@ setInterval(async () => {
 
 // สร้างเซิร์ฟเวอร์
 const app = new Elysia()
-  .get('/telemetrics', async ({ set }) => {
-    const mockData = await fetchDataFromAPI();
+  .get('/', async ({ set }) => {
+    const Datas = await fetchDataFromAPI();
     set.headers['Content-Type'] = 'application/xml';
-    return convertToXML(mockData);
+    return convertToXML(Datas);
   })
   .listen(3000);
 
