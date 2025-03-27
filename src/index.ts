@@ -38,7 +38,7 @@ const convertToXML = (data) => {
         },
         ...data.map((seat) => ({
           Seat: [
-            { _attr: { Id: seat.id } },
+            { _attr: { Id: seat.id.toString().padStart(4, '0') } },
             {
               SeatData: {
                 _attr: {
