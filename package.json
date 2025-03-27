@@ -9,6 +9,7 @@
     "@types/xml": "^1.0.11",
     "axios": "^1.8.4",
     "elysia": "latest",
+    "net": "^1.0.2",
     "xml": "^1.0.1"
   },
   "devDependencies": {

@@ -1,131 +1,112 @@
 import { Elysia } from 'elysia';
 import axios from 'axios';
 import xml from 'xml';
+import net from 'net';
 
-const getRandomSeats = () => {
-  const seatCount = Math.floor(Math.random() * 2) + 1; // 1-2 seats
-  const seats = [];
-  for (let i = 0; i < seatCount; i++) {
-    const seatId = Math.floor(Math.random() * 10) + 1; // Seat 1-10
-    seats.push({
-      name: `Seat ${seatId}`,
-      prio: false,
-      prioOn: false,
-      seatName: `Seat ${seatId}`,
-      micOn: Math.random() < 0.5,
-      id: seatId,
-      participantId: Math.floor(Math.random() * 100000)
-    });
-  }
-  return seats;
-};
+// ตั้งค่าพอร์ต TCP ตาม Bosch DCN
+const TCP_PORT = 20000;
 
-let mockData = getRandomSeats();
-
-// setInterval(() => {
-//   mockData = getRandomSeats();
-//   console.log('Updated mockData:', mockData);
-// }, 5000);
-
-// ดึงข้อมูลจาก API
+// ฟังก์ชันดึงข้อมูลจาก API
 const fetchDataFromAPI = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': 'dc393fe11b74796acb422be783d021d471c357bc997e17c289e9962a1292c9ef2b53106888e70dd43e72284be1b4bec96e3ce330c6caebc952f5ebf61d0e359f',
+        'Bosch-Sid': '88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9',
       },
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching data from API:', error);
+    console.error('❌ Error fetching data:', error);
     return [];
   }
 };
 
-// แปลงข้อมูลเป็น XML
+// ฟังก์ชันแปลงข้อมูลเป็น XML (ตาม Bosch DCN)
 const convertToXML = (data) => {
-  return xml({
-    SeatActivity: [
-      {
-        _attr: {
-          'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-          'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-          Version: '1',
-          TimeStamp: new Date().toISOString(),
-          Topic: 'Seat',
-          Type: 'SeatUpdated',
+  return xml(
+    {
+      SeatActivity: [
+        {
+          _attr: {
+            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+            'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+            Version: '1',
+            TimeStamp: new Date().toISOString(),
+            Topic: 'Seat',
+            Type: 'SeatUpdated',
+          },
         },
-      },
-      ...data.map((seat) => ({
-        Seat: [
-          { _attr: { Id: seat.id.toString().padStart(4, '0') } },
-          {
-            SeatData: {
-              _attr: {
-                Name: seat.seatName,
-                MicrophoneActive: seat.micOn.toString(),
-                SeatType: 'Delegate',
-                IsSpecialStation: 'false',
+        ...data.map((seat) => ({
+          Seat: [
+            { _attr: { Id: seat.id } },
+            {
+              SeatData: {
+                _attr: {
+                  Name: seat.seatName,
+                  MicrophoneActive: seat.micOn.toString(),
+                  SeatType: 'Delegate',
+                  IsSpecialStation: 'false',
+                },
               },
             },
-          },
-          {
-            Participant: [
-              { _attr: { Id: seat.participantId } },
-              {
-                ParticipantData: {
-                  _attr: {
-                    Present: 'false',
-                    VotingWeight: '1',
-                    VotingAuthorisation: 'true',
-                    MicrophoneAuthorisation: 'true',
-                    FirstName: 'Unknown',
-                    MiddleName: '',
-                    LastName: 'Participant',
-                    Title: 'Delegate',
-                    Country: 'Unknown',
-                    RemainingSpeechTime: '-1',
-                    SpeechTimerOnHold: 'false',
+            {
+              Participant: [
+                { _attr: { Id: seat.participantId } },
+                {
+                  ParticipantData: {
+                    _attr: {
+                      Present: 'false',
+                      VotingWeight: '1',
+                      VotingAuthorisation: 'true',
+                      MicrophoneAuthorisation: 'true',
+                      FirstName: 'Unknown',
+                      MiddleName: '',
+                      LastName: 'Participant',
+                      Title: 'Delegate',
+                      Country: 'Unknown',
+                      RemainingSpeechTime: '-1',
+                      SpeechTimerOnHold: 'false',
+                    },
                   },
                 },
-              },
-              {
-                Group: {
-                  _attr: {
-                    Name: '-',
-                    RemainingGroupSpeechTime: '-1',
-                    StopWatchState: 'STOPWATCH_IDLE',
-                  },
-                },
-              },
-            ],
-          },
-          { IsResponding: 'false' },
-        ],
-      })),
-    ],
-  }, { declaration: true });
+              ],
+            },
+            { IsResponding: 'false' },
+          ],
+        })),
+      ],
+    },
+    { declaration: true }
+  );
 };
 
-// ตรวจสอบข้อมูลล่าสุดทุกๆ 5 วินาที
-let previousData = [];
+// สร้าง TCP Server
+const tcpServer = net.createServer((socket) => {
+  console.log(`✅ Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
 
-setInterval(async () => {
-  const currentData = await fetchDataFromAPI();
-  // ถ้ามีการเปลี่ยนแปลงข้อมูล
-  if (JSON.stringify(currentData) !== JSON.stringify(previousData)) {
-    console.log('Data updated:', currentData);
-    previousData = currentData;  // อัปเดตข้อมูลที่เก็บไว้
-  }
-}, 5000);  // รอทุกๆ 5 วินาที
+  // ส่งข้อมูลให้ client ทุกๆ 5 วินาที
+  setInterval(async () => {
+    const data = await fetchDataFromAPI();
+    const xmlData = convertToXML(data);
+    socket.write(xmlData + '\n'); // ส่ง XML ไปยัง client
+  }, 5000);
 
-// สร้างเซิร์ฟเวอร์
+  socket.on('close', () => console.log('❌ Client disconnected'));
+  socket.on('error', (err) => console.error('❌ Socket error:', err));
+});
+
+// เริ่ม TCP Server ที่พอร์ต 20000
+tcpServer.listen(TCP_PORT, () => {
+  console.log(`🚀 TCP Server listening on port ${TCP_PORT}`);
+});
+
+// สร้าง API Server ด้วย Elysia.js
 const app = new Elysia()
   .get('/', async ({ set }) => {
-    const Datas = await fetchDataFromAPI();
+    const data = await fetchDataFromAPI();
     set.headers['Content-Type'] = 'application/xml';
-    return convertToXML(Datas);
+    return convertToXML(data);
   })
-  .listen(20000);
+  .listen(3000);
 
-console.log('Server is running on http://localhost:20000');
+console.log('🌐 HTTP API Server running on http://localhost:3000');
