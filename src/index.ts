@@ -89,7 +89,8 @@ const tcpServer = net.createServer((socket) => {
     const data = await fetchDataFromAPI();
     const xmlData = convertToXML(data);
     socket.write(xmlData + '\n'); // ส่ง XML ไปยัง client
-  }, 5000);
+    console.log(xmlData);
+  }, 2000);
 
   socket.on('close', () => console.log('❌ Client disconnected'));
   socket.on('error', (err) => console.error('❌ Socket error:', err));
