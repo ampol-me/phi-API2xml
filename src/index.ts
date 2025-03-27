@@ -22,10 +22,10 @@ const getRandomSeats = () => {
 
 let mockData = getRandomSeats();
 
-setInterval(() => {
-  mockData = getRandomSeats();
-  console.log('Updated mockData:', mockData);
-}, 5000);
+// setInterval(() => {
+//   mockData = getRandomSeats();
+//   console.log('Updated mockData:', mockData);
+// }, 5000);
 
 // ดึงข้อมูลจาก API
 const fetchDataFromAPI = async () => {
