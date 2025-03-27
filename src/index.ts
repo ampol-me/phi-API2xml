@@ -3,15 +3,19 @@ import axios from 'axios';
 import xml from 'xml';
 import net from 'net';
 
-// ตั้งค่าพอร์ต TCP ตาม Bosch DCN
+// ตั้งค่าพอร์ต TCP
 const TCP_PORT = 20000;
+const HTTP_PORT = 3000;
 
-// ฟังก์ชันดึงข้อมูลจาก API
+// เก็บ client ที่เชื่อมต่อ TCP
+const clients: net.Socket[] = [];
+
+// ดึงข้อมูลจาก API
 const fetchDataFromAPI = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '041186302e679c5baeecb4bd4f123d2bca71217e2b7c365cc2e0f177b3698a151d53bdc81af99456a91dd4a66b3ca875b591b4957d1b2db6f22dd42151ddb6a3',
+        'Bosch-Sid': '88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9',
       },
     });
     return response.data;
@@ -21,7 +25,7 @@ const fetchDataFromAPI = async () => {
   }
 };
 
-// ฟังก์ชันแปลงข้อมูลเป็น XML (ตาม Bosch DCN)
+// แปลงข้อมูลเป็น XML ตาม Bosch DCN
 const convertToXML = (data) => {
   return xml(
     {
@@ -38,7 +42,7 @@ const convertToXML = (data) => {
         },
         ...data.map((seat) => ({
           Seat: [
-            { _attr: { Id: seat.id.toString().padStart(4, '0') } },
+            { _attr: { Id: seat.id } },
             {
               SeatData: {
                 _attr: {
@@ -80,34 +84,49 @@ const convertToXML = (data) => {
   );
 };
 
-// สร้าง TCP Server
+// สร้าง TCP Server รองรับ Multiple Clients
 const tcpServer = net.createServer((socket) => {
-  console.log(`✅ Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
+  console.log(`✅ Client connected: ${socket.remoteAddress}:${socket.remotePort}`);
+  clients.push(socket);
 
-  // ส่งข้อมูลให้ client ทุกๆ 5 วินาที
-  setInterval(async () => {
-    const data = await fetchDataFromAPI();
-    const xmlData = convertToXML(data);
-    socket.write(xmlData + '\n'); // ส่ง XML ไปยัง client
-    console.log(xmlData);
-  }, 2000);
+  // ลบ client ออกจาก list เมื่อ disconnect
+  socket.on('close', () => {
+    console.log(`❌ Client disconnected: ${socket.remoteAddress}:${socket.remotePort}`);
+    clients.splice(clients.indexOf(socket), 1);
+  });
 
-  socket.on('close', () => console.log('❌ Client disconnected'));
   socket.on('error', (err) => console.error('❌ Socket error:', err));
 });
 
-// เริ่ม TCP Server ที่พอร์ต 20000
+// เริ่ม TCP Server
 tcpServer.listen(TCP_PORT, () => {
   console.log(`🚀 TCP Server listening on port ${TCP_PORT}`);
 });
 
-// สร้าง API Server ด้วย Elysia.js
+// ส่งข้อมูลไปยังทุก Client ที่เชื่อมต่ออยู่ทุก 5 วินาที
+setInterval(async () => {
+  const data = await fetchDataFromAPI();
+  const xmlData = convertToXML(data);
+
+  // Log Seat ID ที่เปิดไมค์อยู่
+  const activeSeats = data.filter((seat) => seat.micOn).map((seat) => seat.id);
+  if (activeSeats.length > 0) {
+    console.log(`🎤 Active Seats: ${activeSeats.join(', ')}`);
+  }
+
+  // ส่ง XML ไปยังทุก Client
+  clients.forEach((client) => {
+    client.write(xmlData + '\n');
+  });
+}, 5000);
+
+// API Server สำหรับตรวจสอบข้อมูล
 const app = new Elysia()
-  .get('/', async ({ set }) => {
+  .get('/telemetrics', async ({ set }) => {
     const data = await fetchDataFromAPI();
     set.headers['Content-Type'] = 'application/xml';
     return convertToXML(data);
   })
-  .listen(3000);
+  .listen(HTTP_PORT);
 
-console.log('🌐 XML :Port 20000 - HTTP API Server running on http://localhost:3000');
+console.log(`🌐 HTTP API Server running on http://localhost:${HTTP_PORT}`);
