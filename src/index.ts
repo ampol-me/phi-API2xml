@@ -3,11 +3,8 @@ import axios from 'axios';
 import xml from 'xml';
 import net from 'net';
 
-// ตั้งค่าพอร์ต TCP
 const TCP_PORT = 20000;
 const HTTP_PORT = 3000;
-
-// เก็บ client ที่เชื่อมต่อ TCP
 const clients: net.Socket[] = [];
 
 // ดึงข้อมูลจาก API
@@ -15,7 +12,7 @@ const fetchDataFromAPI = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '7581b2820961e6ce1b70e42f5cf52c34211f1d90bb6a9d511083c86ebc1d5cfafddaaf6932a10d5b9479a87bd8de0dddb0c6c8974416c2dea7eedeb11b9811a6',
+        'Bosch-Sid': '88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9',
       },
     });
     return response.data;
@@ -25,21 +22,12 @@ const fetchDataFromAPI = async () => {
   }
 };
 
-// แปลงข้อมูลเป็น XML ตาม Bosch DCN
-const convertToXML = (data) => {
+// 🟢 SeatActivity XML
+const generateSeatActivityXML = (data) => {
   return xml(
     {
       SeatActivity: [
-        {
-          _attr: {
-            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-            Version: '1',
-            TimeStamp: new Date().toISOString(),
-            Topic: 'Seat',
-            Type: 'SeatUpdated',
-          },
-        },
+        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Seat', Type: 'SeatUpdated' } },
         ...data.map((seat) => ({
           Seat: [
             { _attr: { Id: seat.id } },
@@ -64,9 +52,7 @@ const convertToXML = (data) => {
                       VotingAuthorisation: 'true',
                       MicrophoneAuthorisation: 'true',
                       FirstName: 'Unknown',
-                      MiddleName: '',
                       LastName: 'Participant',
-                      Title: 'Delegate',
                       Country: 'Unknown',
                       RemainingSpeechTime: '-1',
                       SpeechTimerOnHold: 'false',
@@ -84,12 +70,105 @@ const convertToXML = (data) => {
   );
 };
 
+// 🔵 ParticipantActivity XML
+const generateParticipantActivityXML = (data) => {
+  return xml(
+    {
+      ParticipantActivity: [
+        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Participant', Type: 'ParticipantUpdated' } },
+        ...data.map((participant) => ({
+          Participant: [
+            { _attr: { Id: participant.participantId } },
+            {
+              ParticipantData: {
+                _attr: {
+                  Present: 'false',
+                  VotingWeight: '1',
+                  VotingAuthorisation: 'false',
+                  MicrophoneAuthorisation: 'false',
+                  FirstName: 'admin',
+                  MiddleName: '',
+                  LastName: '',
+                  Title: '',
+                  Country: '',
+                  RemainingSpeechTime: '-1',
+                  SpeechTimerOnHold: 'false',
+                },
+              },
+            },
+          ],
+        })),
+      ],
+    },
+    { declaration: true }
+  );
+};
+
+// 🔴 DiscussionActivity XML
+const generateDiscussionActivityXML = (data) => {
+  return xml(
+    {
+      DiscussionActivity: [
+        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Discussion', Type: 'RequestListUpdated' } },
+        {
+          Discussion: [
+            { _attr: { Id: '162' } },
+            {
+              RequestList: [
+                {
+                  Participants: data.map((seat) => ({
+                    ParticipantContainer: [
+                      { _attr: { Id: seat.participantId } },
+                      {
+                        ParticipantData: {
+                          _attr: {
+                            Present: 'true',
+                            VotingWeight: '1',
+                            VotingAuthorisation: 'true',
+                            MicrophoneAuthorisation: 'true',
+                            FirstName: 'Peter',
+                            LastName: 'Primary',
+                            Title: 'First Speaker',
+                            Country: 'USA',
+                            RemainingSpeechTime: '-1',
+                            SpeechTimerOnHold: 'false',
+                          },
+                        },
+                      },
+                      {
+                        Seat: [
+                          { _attr: { Id: seat.id } },
+                          {
+                            SeatData: {
+                              _attr: {
+                                Name: seat.seatName,
+                                MicrophoneActive: seat.micOn.toString(),
+                                SeatType: 'Delegate',
+                                IsSpecialStation: 'false',
+                              },
+                            },
+                          },
+                          { IsResponding: 'false' },
+                        ],
+                      },
+                    ],
+                  })),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    { declaration: true }
+  );
+};
+
 // สร้าง TCP Server รองรับ Multiple Clients
 const tcpServer = net.createServer((socket) => {
   console.log(`✅ Client connected: ${socket.remoteAddress}:${socket.remotePort}`);
   clients.push(socket);
 
-  // ลบ client ออกจาก list เมื่อ disconnect
   socket.on('close', () => {
     console.log(`❌ Client disconnected: ${socket.remoteAddress}:${socket.remotePort}`);
     clients.splice(clients.indexOf(socket), 1);
@@ -98,15 +177,18 @@ const tcpServer = net.createServer((socket) => {
   socket.on('error', (err) => console.error('❌ Socket error:', err));
 });
 
-// เริ่ม TCP Server
 tcpServer.listen(TCP_PORT, () => {
   console.log(`🚀 TCP Server listening on port ${TCP_PORT}`);
 });
 
-// ส่งข้อมูลไปยังทุก Client ที่เชื่อมต่ออยู่ทุก 5 วินาที
+// ส่ง XML สลับกันไปทุก 5 วินาที
+let xmlTypeIndex = 0;
+const xmlGenerators = [generateSeatActivityXML, generateParticipantActivityXML, generateDiscussionActivityXML];
+
 setInterval(async () => {
   const data = await fetchDataFromAPI();
-  const xmlData = convertToXML(data);
+  const xmlData = xmlGenerators[xmlTypeIndex](data);
+  xmlTypeIndex = (xmlTypeIndex + 1) % xmlGenerators.length;
 
   // Log Seat ID ที่เปิดไมค์อยู่
   const activeSeats = data.filter((seat) => seat.micOn).map((seat) => seat.id);
@@ -120,12 +202,12 @@ setInterval(async () => {
   });
 }, 5000);
 
-// API Server สำหรับตรวจสอบข้อมูล
+// API Server สำหรับตรวจสอบข้อมูล XML
 const app = new Elysia()
   .get('/telemetrics', async ({ set }) => {
     const data = await fetchDataFromAPI();
     set.headers['Content-Type'] = 'application/xml';
-    return convertToXML(data);
+    return generateSeatActivityXML(data);
   })
   .listen(HTTP_PORT);
 
