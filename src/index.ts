@@ -3,6 +3,7 @@ import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
 
+const Sid = '8660da6b4c3e4c81c16b2f35f0671b14f19dfb8a232d6120410fa87f63b6bde865219a0b192f621c1d8ce51a3af5b69d37ac76901cb7cbf211d731287ff70f7f'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
 db.run(`
@@ -53,21 +54,32 @@ const generateXML = () => {
   return seatActivity + '\n' + discussionActivity;
 };
 
-// ฟังก์ชันดึงข้อมูลจาก API และอัปเดต SQLite
+// ฟังก์ชันดึงข้อมูลไมค์จาก API และอัปเดตฐานข้อมูล
 const fetchMicStatus = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '8660da6b4c3e4c81c16b2f35f0671b14f19dfb8a232d6120410fa87f63b6bde865219a0b192f621c1d8ce51a3af5b69d37ac76901cb7cbf211d731287ff70f7f',
+        'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
       },
     });
 
     const activeSeats = response.data;
 
-    // รีเซ็ตค่าไมค์ทั้งหมดเป็น false ก่อน
+    // ดึงข้อมูลปัจจุบันจากฐานข้อมูล
+    const currentSeats = db.query('SELECT seat_id FROM mic_status WHERE mic_active = 1').all().map(s => s.seat_id);
+    const newSeats = activeSeats.map(s => s.id);
+
+    // ตรวจสอบว่ามีการเปลี่ยนแปลงหรือไม่
+    const hasChanged = JSON.stringify(currentSeats.sort()) !== JSON.stringify(newSeats.sort());
+
+    if (!hasChanged) {
+      return; // ไม่มีการเปลี่ยนแปลง ไม่ต้องอัปเดต XML หรือส่งให้ TCP Clients
+    }
+
+    // รีเซ็ตสถานะไมค์ทั้งหมดเป็นปิด
     db.run('UPDATE mic_status SET mic_active = 0');
 
-    // อัปเดตเฉพาะที่เปิดอยู่
+    // อัปเดตเฉพาะไมค์ที่เปิด
     activeSeats.forEach(seat => {
       db.run(
         'INSERT INTO mic_status (seat_id, seat_name, mic_active) VALUES (?, ?, ?) ON CONFLICT(seat_id) DO UPDATE SET mic_active = ?',
@@ -77,13 +89,12 @@ const fetchMicStatus = async () => {
 
     // สร้าง XML ใหม่
     const newXML = generateXML();
+    lastMicStatus = newXML;
 
-    // ถ้า XML เปลี่ยนแปลง ค่อยอัปเดตและส่งให้ TCP Clients
-    if (newXML !== lastMicStatus) {
-      lastMicStatus = newXML;
-      clients.forEach(client => client.write(newXML));
-      console.log('🔄 Mic status updated');
-    }
+    // ส่งข้อมูลไปยัง TCP Clients
+    clients.forEach(client => client.write(newXML));
+    console.log('🔄 Mic status updated, sending XML to TCP clients');
+
   } catch (error) {
     console.error('❌ Error fetching mic status:', error);
   }
