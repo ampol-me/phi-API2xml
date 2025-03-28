@@ -26,7 +26,7 @@ const generateXML = () => {
 <?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">
   ${seats.map(seat => `
-    <Seat Id="${seat.seat_id}">
+    <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
       <SeatData Name="${seat.seat_name}" MicrophoneActive="true" />
     </Seat>
   `).join('')}
@@ -39,8 +39,8 @@ const generateXML = () => {
     <ActiveList>
       <Participants>
         ${seats.map(seat => `
-          <ParticipantContainer Id="${seat.seat_id}">
-            <Seat Id="${seat.seat_id}">
+          <ParticipantContainer Id="${seat.seat_id.toString().padStart(4, '0')}">
+            <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
               <SeatData Name="${seat.seat_name}" MicrophoneActive="true" />
             </Seat>
           </ParticipantContainer>
