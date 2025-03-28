@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="2025-03-28T11:03:27.8559069+07:00" Topic="Seat" Type="SeatUpdated">
+    <Seat Id="5685">
+        <SeatData Name="A111" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+        <Participant Id="0">
+            <ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="A111" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" />
+        </Participant>
+        <IsReposnding>false</IsReposnding>
+    </Seat>
+</SeatActivity>
+<?xml version="1.0" encoding="utf-8"?>
+<DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="2025-03-28T11:03:27.8559069+07:00" Topic="Discussion" Type="ActiveListUpdated">
+    <Discussion Id="71">
+        <ActiveList>
+            <Participants>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5670">
+                        <SeatData Name="A108" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5686">
+                        <SeatData Name="A109" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5669">
+                        <SeatData Name="A110" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5685">
+                        <SeatData Name="A111" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+            </Participants>
+        </ActiveList>
+    </Discussion>
+</DiscussionActivity>

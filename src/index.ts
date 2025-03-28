@@ -30,7 +30,7 @@ let mockData = getRandomSeats();
 
 setInterval(() => {
   mockData = getRandomSeats();
-  console.log('Updated mockData:', mockData);
+  //console.log('Updated mockData:', mockData);
 }, 5000);
 
 // ดึงข้อมูลจาก API
@@ -46,7 +46,7 @@ const fetchDataFromAPI = async () => {
     ]);
     return response.data;
   } catch (error) {
-    console.error('❌ Error fetching data:', error);
+    //console.error('❌ Error fetching data:', error);
     return mockData;
   }
 };
@@ -59,7 +59,7 @@ const generateSeatActivityXML = (data) => {
         { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Seat', Type: 'SeatUpdated' } },
         ...data.map((seat) => ({
           Seat: [
-            { _attr: { Id: seat.id } },
+            { _attr: { Id: seat.id.toString().padStart(4, '0') } },
             {
               SeatData: {
                 _attr: {
@@ -82,7 +82,7 @@ const generateSeatActivityXML = (data) => {
                       MicrophoneAuthorisation: 'true',
                       FirstName: 'Unknown',
                       LastName: 'Participant',
-                      Country: 'Unknown',
+                      Country: 'Thailand',
                       RemainingSpeechTime: '-1',
                       SpeechTimerOnHold: 'false',
                     },
@@ -212,7 +212,7 @@ tcpServer.listen(TCP_PORT, () => {
 
 // ส่ง XML สลับกันไปทุก 5 วินาที
 let xmlTypeIndex = 0;
-const xmlGenerators = [generateSeatActivityXML, generateParticipantActivityXML, generateDiscussionActivityXML];
+const xmlGenerators = [generateSeatActivityXML, generateDiscussionActivityXML];
 
 setInterval(async () => {
   const data = await fetchDataFromAPI();
@@ -229,7 +229,7 @@ setInterval(async () => {
   clients.forEach((client) => {
     client.write(xmlData + '\n');
   });
-}, 5000);
+}, 2000);
 
 // API Server สำหรับตรวจสอบข้อมูล XML
 const app = new Elysia()
