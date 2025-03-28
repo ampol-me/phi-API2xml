@@ -1,243 +1,114 @@
 import { Elysia } from 'elysia';
+import { Database } from 'bun:sqlite';
 import axios from 'axios';
-import xml from 'xml';
 import net from 'net';
 
-const TCP_PORT = 20000;
-const HTTP_PORT = 3000;
-const clients: net.Socket[] = [];
+// สร้าง Database SQLite
+const db = new Database('mic_control.db');
+db.run(`
+  CREATE TABLE IF NOT EXISTS mic_status (
+    seat_id INTEGER PRIMARY KEY,
+    seat_name TEXT,
+    mic_active BOOLEAN
+  )
+`);
 
+// เริ่มต้น Elysia API
+const app = new Elysia();
 
-const getRandomSeats = () => {
-  const seatCount = Math.floor(Math.random() * 2) + 1; // 1-2 seats
-  const seats = [];
-  for (let i = 0; i < seatCount; i++) {
-    const seatId = Math.floor(Math.random() * 10) + 1; // Seat 1-10
-    seats.push({
-      name: `Seat ${seatId}`,
-      prio: false,
-      prioOn: false,
-      seatName: `Seat ${seatId}`,
-      micOn: Math.random() < 0.5,
-      id: seatId,
-      participantId: Math.floor(Math.random() * 100000)
-    });
-  }
-  return seats;
+// ตัวแปรเก็บสถานะล่าสุด
+let lastMicStatus: string = '';
+
+const generateXML = () => {
+  const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
+  
+  const seatActivity = `
+<?xml version="1.0" encoding="utf-8"?>
+<SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">
+  ${seats.map(seat => `
+    <Seat Id="${seat.seat_id}">
+      <SeatData Name="${seat.seat_name}" MicrophoneActive="true" />
+    </Seat>
+  `).join('')}
+</SeatActivity>`;
+
+  const discussionActivity = `
+<?xml version="1.0" encoding="utf-8"?>
+<DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
+  <Discussion Id="71">
+    <ActiveList>
+      <Participants>
+        ${seats.map(seat => `
+          <ParticipantContainer Id="${seat.seat_id}">
+            <Seat Id="${seat.seat_id}">
+              <SeatData Name="${seat.seat_name}" MicrophoneActive="true" />
+            </Seat>
+          </ParticipantContainer>
+        `).join('')}
+      </Participants>
+    </ActiveList>
+  </Discussion>
+</DiscussionActivity>`;
+
+  return seatActivity + '\n' + discussionActivity;
 };
 
-let mockData = getRandomSeats();
-
-setInterval(() => {
-  mockData = getRandomSeats();
-  //console.log('Updated mockData:', mockData);
-}, 5000);
-
-// ดึงข้อมูลจาก API
-const fetchDataFromAPI = async () => {
+// ฟังก์ชันดึงข้อมูลจาก API และอัปเดต SQLite
+const fetchMicStatus = async () => {
   try {
-    const response = await Promise.race([
-      axios.get('http://10.115.206.10/api/speakers', {
-        headers: {
-          'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
-        },
-      }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
-    ]);
-    return response.data;
+    const response = await axios.get('http://10.115.206.10/api/speakers', {
+      headers: {
+        'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
+      },
+    });
+
+    const activeSeats = response.data;
+
+    // รีเซ็ตค่าไมค์ทั้งหมดเป็น false ก่อน
+    db.run('UPDATE mic_status SET mic_active = 0');
+
+    // อัปเดตเฉพาะที่เปิดอยู่
+    activeSeats.forEach(seat => {
+      db.run(
+        'INSERT INTO mic_status (seat_id, seat_name, mic_active) VALUES (?, ?, ?) ON CONFLICT(seat_id) DO UPDATE SET mic_active = ?',
+        [seat.id, seat.seatName, true, true]
+      );
+    });
+
+    // สร้าง XML ใหม่
+    const newXML = generateXML();
+
+    // ถ้า XML เปลี่ยนแปลง ค่อยอัปเดตและส่งให้ TCP Clients
+    if (newXML !== lastMicStatus) {
+      lastMicStatus = newXML;
+      clients.forEach(client => client.write(newXML));
+      console.log('🔄 Mic status updated');
+    }
   } catch (error) {
-    //console.error('❌ Error fetching data:', error);
-    return mockData;
+    console.error('❌ Error fetching mic status:', error);
   }
 };
 
-// 🟢 SeatActivity XML
-const generateSeatActivityXML = (data) => {
-  return xml(
-    {
-      SeatActivity: [
-        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Seat', Type: 'SeatUpdated' } },
-        ...data.map((seat) => ({
-          Seat: [
-            { _attr: { Id: seat.id.toString().padStart(4, '0') } },
-            {
-              SeatData: {
-                _attr: {
-                  Name: seat.seatName,
-                  MicrophoneActive: seat.micOn.toString(),
-                  SeatType: 'Delegate',
-                  IsSpecialStation: 'false',
-                },
-              },
-            },
-            {
-              Participant: [
-                { _attr: { Id: seat.participantId } },
-                {
-                  ParticipantData: {
-                    _attr: {
-                      Present: 'false',
-                      VotingWeight: '1',
-                      VotingAuthorisation: 'true',
-                      MicrophoneAuthorisation: 'true',
-                      FirstName: 'Unknown',
-                      LastName: 'Participant',
-                      Country: 'Thailand',
-                      RemainingSpeechTime: '-1',
-                      SpeechTimerOnHold: 'false',
-                    },
-                  },
-                },
-              ],
-            },
-            { IsResponding: 'false' },
-          ],
-        })),
-      ],
-    },
-    { declaration: true }
-  );
-};
+// เรียกใช้งาน fetchMicStatus ทุก 1 วินาที
+setInterval(fetchMicStatus, 1000);
 
-// 🔵 ParticipantActivity XML
-const generateParticipantActivityXML = (data) => {
-  return xml(
-    {
-      ParticipantActivity: [
-        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Participant', Type: 'ParticipantUpdated' } },
-        ...data.map((participant) => ({
-          Participant: [
-            { _attr: { Id: participant.participantId } },
-            {
-              ParticipantData: {
-                _attr: {
-                  Present: 'false',
-                  VotingWeight: '1',
-                  VotingAuthorisation: 'false',
-                  MicrophoneAuthorisation: 'false',
-                  FirstName: 'admin',
-                  MiddleName: '',
-                  LastName: '',
-                  Title: '',
-                  Country: '',
-                  RemainingSpeechTime: '-1',
-                  SpeechTimerOnHold: 'false',
-                },
-              },
-            },
-          ],
-        })),
-      ],
-    },
-    { declaration: true }
-  );
-};
+// API รับ XML ปัจจุบัน
+app.get('/mic/status', () => lastMicStatus || generateXML());
 
-// 🔴 DiscussionActivity XML
-const generateDiscussionActivityXML = (data) => {
-  return xml(
-    {
-      DiscussionActivity: [
-        { _attr: { Version: '1', TimeStamp: new Date().toISOString(), Topic: 'Discussion', Type: 'RequestListUpdated' } },
-        {
-          Discussion: [
-            { _attr: { Id: '162' } },
-            {
-              RequestList: [
-                {
-                  Participants: data.map((seat) => ({
-                    ParticipantContainer: [
-                      { _attr: { Id: seat.participantId } },
-                      {
-                        ParticipantData: {
-                          _attr: {
-                            Present: 'true',
-                            VotingWeight: '1',
-                            VotingAuthorisation: 'true',
-                            MicrophoneAuthorisation: 'true',
-                            FirstName: 'Peter',
-                            LastName: 'Primary',
-                            Title: 'First Speaker',
-                            Country: 'USA',
-                            RemainingSpeechTime: '-1',
-                            SpeechTimerOnHold: 'false',
-                          },
-                        },
-                      },
-                      {
-                        Seat: [
-                          { _attr: { Id: seat.id } },
-                          {
-                            SeatData: {
-                              _attr: {
-                                Name: seat.seatName,
-                                MicrophoneActive: seat.micOn.toString(),
-                                SeatType: 'Delegate',
-                                IsSpecialStation: 'false',
-                              },
-                            },
-                          },
-                          { IsResponding: 'false' },
-                        ],
-                      },
-                    ],
-                  })),
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    { declaration: true }
-  );
-};
+// เริ่ม TCP Server
+const clients: net.Socket[] = [];
+const tcpServer = net.createServer(client => {
+  clients.push(client);
+  console.log('New TCP client connected');
 
-// สร้าง TCP Server รองรับ Multiple Clients
-const tcpServer = net.createServer((socket) => {
-  console.log(`✅ Client connected: ${socket.remoteAddress}:${socket.remotePort}`);
-  clients.push(socket);
-
-  socket.on('close', () => {
-    console.log(`❌ Client disconnected: ${socket.remoteAddress}:${socket.remotePort}`);
-    clients.splice(clients.indexOf(socket), 1);
+  client.on('end', () => {
+    clients.splice(clients.indexOf(client), 1);
   });
 
-  socket.on('error', (err) => console.error('❌ Socket error:', err));
+  // ส่ง XML ล่าสุดให้ client ใหม่ที่เชื่อมต่อ
+  client.write(lastMicStatus || generateXML());
 });
+tcpServer.listen(20000, () => console.log('TCP Server listening on port 20000'));
 
-tcpServer.listen(TCP_PORT, () => {
-  console.log(`🚀 TCP Server listening on port ${TCP_PORT}`);
-});
-
-// ส่ง XML สลับกันไปทุก 5 วินาที
-let xmlTypeIndex = 0;
-const xmlGenerators = [generateSeatActivityXML, generateDiscussionActivityXML];
-
-setInterval(async () => {
-  const data = await fetchDataFromAPI();
-  const xmlData = xmlGenerators[xmlTypeIndex](data);
-  xmlTypeIndex = (xmlTypeIndex + 1) % xmlGenerators.length;
-
-  // Log Seat ID ที่เปิดไมค์อยู่
-  const activeSeats = data.filter((seat) => seat.micOn).map((seat) => seat.id);
-  if (activeSeats.length > 0) {
-    console.log(`🎤 Active Seats: ${activeSeats.join(', ')}`);
-  }
-
-  // ส่ง XML ไปยังทุก Client
-  clients.forEach((client) => {
-    client.write(xmlData + '\n');
-  });
-}, 2000);
-
-// API Server สำหรับตรวจสอบข้อมูล XML
-const app = new Elysia()
-  .get('/telemetrics', async ({ set }) => {
-    const data = await fetchDataFromAPI();
-    set.headers['Content-Type'] = 'application/xml';
-    return generateSeatActivityXML(data);
-  })
-  .listen(HTTP_PORT);
-
-console.log(`🌐 HTTP API Server running on http://localhost:${HTTP_PORT}`);
+// เริ่ม Elysia Server
+app.listen(3000, () => console.log('API Server listening on port 3000'));
