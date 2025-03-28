@@ -58,7 +58,7 @@ const fetchMicStatus = async () => {
   try {
     const response = await axios.get('http://10.115.206.10/api/speakers', {
       headers: {
-        'Bosch-Sid': '35041dcce1ed5031a5831b65b784c2d432e5dfc699f217efa2da565048397706bf8a9b2cc625b7a683795298959561358406e74ecf0c8fdb484a02e5e2b43dee',
+        'Bosch-Sid': '8660da6b4c3e4c81c16b2f35f0671b14f19dfb8a232d6120410fa87f63b6bde865219a0b192f621c1d8ce51a3af5b69d37ac76901cb7cbf211d731287ff70f7f',
       },
     });
 
