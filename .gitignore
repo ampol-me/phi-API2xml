@@ -40,4 +40,4 @@ yarn-error.log*
 **/*.log
 package-lock.json
 **/*.bun
-mic_control.db
+*.db
