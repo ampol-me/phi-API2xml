@@ -21,6 +21,7 @@ const app = new Elysia();
 // ตัวแปรเก็บสถานะล่าสุด
 let lastMicStatus: string = '';
 
+
 const generateXML = () => {
   const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
   
