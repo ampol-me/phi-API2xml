@@ -2,7 +2,6 @@ import { Elysia } from 'elysia';
 import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
-import createConnection from 'net';
 
 const apiHost = 'localhost:3001'; //10.115.206.10 - localhost:3001
 const Sid = '1ef3065c1850429d4e77563e4d3243da913a6adde0a136079b4ba1bce75aafa4cd56c8c1fc8e7e4e633789542206ad7b8c6ad93205deae9d9956be08e1b3b6ab'
@@ -32,13 +31,13 @@ const generateXML = () => {
   
   // Get only the latest active seat
   const latestSeat = seats[seats.length - 1];
-  const seatActivity = `4 ■<?xml version="1.0" encoding="utf-8"?>
+  const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
       <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
-const discussionActivity = `£ ■<?xml version="1.0" encoding="utf-8"?>
+const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 <DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
   <Discussion Id="1">
     <ActiveList>
@@ -124,6 +123,10 @@ const tcpServer = net.createServer(client => {
   // ส่ง XML ล่าสุดให้ client ใหม่ที่เชื่อมต่อ
   client.write(lastMicStatus || generateXML());
 
+  client.on("data", (data: any) => {
+    console.log("📥 Received Data:", data.toString());
+    // Parse and process the XML data if needed
+  });
   // กรณี client disconnect
   client.on("end", () => {
     clients.splice(clients.indexOf(client), 1);
@@ -131,6 +134,7 @@ const tcpServer = net.createServer(client => {
     console.log(`🔹 Total clients: ${clients.length}`);
   });
 
+  console.log(`🔹 Sending XML to ${clientAddress}: ${lastMicStatus || generateXML()}`);
   // กรณี client มี error
   client.on("error", (err) => {
     console.error(`⚠️ Error on ${clientAddress}:`, err.message);
@@ -143,19 +147,26 @@ tcpServer.listen(20000, () => {
 });
 
 
-const clients = createConnection({ host: "10.115.206.37", port: 20000 }, () => {
-  console.log("✅ Connected to Telematics Camera Controller");
-  clients.write(lastMicStatus);
-  console.log("📤 Sent XML Data");
-});
+// const tcpClient = net.createConnection({ host: "10.115.206.37", port: 20000 }, () => {
+//   console.log("✅ Connected to Telematics Camera Controller");
+//   tcpClient.write(lastMicStatus);
+//   console.log("📤 Sent XML Data");
+// });
 
-clients.on("data", (data:any) => {
-  console.log("📥 Received Response:", data.toString());
-});
+// tcpClient.on("error", (err) => {
+//   console.error("❌ TCP Client Error:", err.message);
+//   setTimeout(() => {
+//     console.log("🔄 Retrying connection...");
+//     tcpClient.connect({ host: "10.115.206.37", port: 20000 });
+//   }, 5000); // Retry after 5 seconds
+// });
+// tcpClient.on("data", (data:any) => {
+//   console.log("📥 Received Response:", data.toString());
+// });
 
-clients.on("close", () => {
-  console.log("❌ Connection Closed");
-});
+// tcpClient.on("close", () => {
+//   console.log("❌ Connection Closed");
+// });
 
 
 // เริ่ม Elysia Server
