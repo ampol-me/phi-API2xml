@@ -3,8 +3,8 @@ import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
 
-const apiHost = '10.115.206.10'; //10.115.206.10 - localhost:3001
-const Sid = '8660da6b4c3e4c81c16b2f35f0671b14f19dfb8a232d6120410fa87f63b6bde865219a0b192f621c1d8ce51a3af5b69d37ac76901cb7cbf211d731287ff70f7f'
+const apiHost = 'localhost:3001'; //10.115.206.10 - localhost:3001
+const Sid = '1ef3065c1850429d4e77563e4d3243da913a6adde0a136079b4ba1bce75aafa4cd56c8c1fc8e7e4e633789542206ad7b8c6ad93205deae9d9956be08e1b3b6ab'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
 db.run(`
@@ -30,16 +30,16 @@ const generateXML = () => {
   const seatActivity = `
 <?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
-    <Seat Id="${latestSeat.seat_id.toString().padStart(3, '0')}">
+    <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
       <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 <DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
-  <Discussion Id="71">
+  <Discussion Id="1">
     <ActiveList>
       <Participants>${seats.map(seat => `
-          <ParticipantContainer Id="${seat.seat_id.toString().padStart(4, '0')}">
+          <ParticipantContainer Id="${seat.seat_id.toString().padStart(1, '0')}">
             <Seat Id="${seat.seat_id.toString().padStart(3, '0')}">
               <SeatData Name="A${seat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
             </Seat>
