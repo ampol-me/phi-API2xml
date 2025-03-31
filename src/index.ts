@@ -31,14 +31,17 @@ const generateXML = () => {
   
   // Get only the latest active seat
   const latestSeat = seats[seats.length - 1];
+  const timestamp = new Date();
+  timestamp.setHours(timestamp.getHours() + 7);
+  
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
-<SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
+<SeatActivity Version="1" TimeStamp="${timestamp.toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
       <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
-<DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
+<DiscussionActivity Version="1" TimeStamp="${timestamp.toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
   <Discussion Id="1">
     <ActiveList>
       <Participants>${seats.map(seat => `
