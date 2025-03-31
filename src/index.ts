@@ -3,6 +3,7 @@ import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
 
+const apiHost = '10.115.206.10'; //10.115.206.10 - localhost:3001
 const Sid = '8660da6b4c3e4c81c16b2f35f0671b14f19dfb8a232d6120410fa87f63b6bde865219a0b192f621c1d8ce51a3af5b69d37ac76901cb7cbf211d731287ff70f7f'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
@@ -23,33 +24,30 @@ let lastMicStatus: string = '';
 const generateXML = () => {
   const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
   
+  // Get only the latest active seat
+  const latestSeat = seats[seats.length - 1];
   const seatActivity = `
 <?xml version="1.0" encoding="utf-8"?>
-<SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">
-  ${seats.map(seat => `
-    <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
-      <SeatData Name="${seat.seat_id.toString().padStart(4, '0')}" MicrophoneActive="true" />
-    </Seat>
-  `).join('')}
-</SeatActivity>`;
-
-  const discussionActivity = `
-<?xml version="1.0" encoding="utf-8"?>
+<SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
+    <Seat Id="${latestSeat.seat_id.toString().padStart(3, '0')}">
+      <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
+    </Seat>` : ''}
+</SeatActivity>`; 
+const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 <DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
   <Discussion Id="71">
     <ActiveList>
-      <Participants>
-        ${seats.map(seat => `
+      <Participants>${seats.map(seat => `
           <ParticipantContainer Id="${seat.seat_id.toString().padStart(4, '0')}">
-            <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
-              <SeatData Name="${seat.seat_id.toString().padStart(4, '0')}" MicrophoneActive="true" />
+            <Seat Id="${seat.seat_id.toString().padStart(3, '0')}">
+              <SeatData Name="A${seat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
             </Seat>
-          </ParticipantContainer>
-        `).join('')}
+          </ParticipantContainer>`).join('')}
       </Participants>
     </ActiveList>
   </Discussion>
-</DiscussionActivity>`;
+</DiscussionActivity>
+`;
 
   return seatActivity + '\n' + discussionActivity;
 };
@@ -57,7 +55,7 @@ const generateXML = () => {
 // ฟังก์ชันดึงข้อมูลไมค์จาก API และอัปเดตฐานข้อมูล
 const fetchMicStatus = async () => {
   try {
-    const response = await axios.get('http://10.115.206.10/api/speakers', {
+    const response = await axios.get(`http://${apiHost}/api/speakers`, {
       headers: {
         'Bosch-Sid': Sid,
       },
