@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seat Layout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+  <div class="relative w-[600px] h-[600px] bg-gray-800 rounded-full border-4 border-gray-700">
+    <!-- Sections -->
+    <div class="absolute top-4 left-1/2 transform -translate-x-1/2 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C3</div>
+    </div>
+    <div class="absolute top-4 right-4 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C4</div>
+    </div>
+    <div class="absolute top-4 left-4 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C5</div>
+    </div>
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C1</div>
+    </div>
+    <div class="absolute bottom-4 right-4 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C2</div>
+    </div>
+    <div class="absolute bottom-4 left-4 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C7</div>
+    </div>
+    <div class="absolute top-1/2 left-4 transform -translate-y-1/2 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C8</div>
+    </div>
+    <div class="absolute top-1/2 right-4 transform -translate-y-1/2 text-center">
+      <div class="bg-blue-500 text-white px-2 py-1 rounded">C6</div>
+    </div>
+
+    <!-- Seats -->
+    <div class="absolute inset-0 flex flex-wrap justify-center items-center">
+      <!-- Example row of seats -->
+      <div class="flex space-x-2">
+        <div class="w-8 h-8 bg-gray-600 text-white text-xs flex items-center justify-center rounded">0001</div>
+        <div class="w-8 h-8 bg-gray-600 text-white text-xs flex items-center justify-center rounded">0002</div>
+        <div class="w-8 h-8 bg-gray-600 text-white text-xs flex items-center justify-center rounded">0003</div>
+      </div>
+      <!-- Add more rows as needed -->
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+http://10.115.206.10/api/speakers
+
+Bosch-Sid : 88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9
+
+[
+  {
+    "name": "Seat 9",
+    "prio": false,
+    "prioOn": false,
+    "seatName": "Seat 9",
+    "micOn": true,
+    "id": 9,
+    "participantId": 65535
+  }
+]
+
+
+{
+  "id": 2,
+  "sid": "88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9"
+}
+
+
+http://10.115.206.10/api/login
+{
+  "override": true,
+  "username": "can_manage",
+  "password": "api"
+}
+
+
+
+GET http://10.115.206.10/api/speakers HTTP/1.1
+Accept: application/json
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en-US,en;q=0.8,fa;q=0.6,sv;q=0.4
+Bosch-Sid: 88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9
+Cache-Control: no-cache
+Connection: keep-alive
+Cookie: 88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9
+Host: 10.115.206.10
+Origin: http://10.115.206.10
+Referer: http://10.115.206.10/REST_API.html
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0
