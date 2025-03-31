@@ -25,7 +25,6 @@ function minifyXML(xml: string): string {
   return xml.replace(/\s+/g, " ").trim(); // ลบช่องว่างและเว้นบรรทัด
 }
 
-
 const generateXML = () => {
   const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
   
@@ -33,15 +32,16 @@ const generateXML = () => {
   const latestSeat = seats[seats.length - 1];
   const timestamp = new Date();
   timestamp.setHours(timestamp.getHours() + 7);
+  const formattedTimestamp = timestamp.toISOString().replace('Z', '+07:00');
   
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
-<SeatActivity Version="1" TimeStamp="${timestamp.toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
+<SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
       <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
-<DiscussionActivity Version="1" TimeStamp="${timestamp.toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
+<DiscussionActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated">
   <Discussion Id="1">
     <ActiveList>
       <Participants>${seats.map(seat => `
@@ -56,6 +56,9 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 </DiscussionActivity>
 `;
 
+const testXml = `♣6♣<?xml version="1.0" encoding="utf-8"?><SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="2025-03-31T16:04:28.6427733+07:00" Topic="Seat" Type="SeatUpdated"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><Participant Id="0"><ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="O1522" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" /></Participant><IsReposnding>false</IsReposnding></Seat></SeatActivity>♥4       <?xml version="1.0" encoding="utf-8"?><DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="2025-03-31T16:04:28.6427733+07:00" Topic="Discussion" Type="ActiveListUpdated"><Discussion Id="80"><ActiveList><Participants><ParticipantContainer Id="0"><Seat Id="5691"><SeatData Name="A101" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="5842"><SeatData Name="F624" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6057"><SeatData Name="K1125" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer></Participants></ActiveList></Discussion></DiscussionActivity>`;
+
+  return testXml;       
   return minifyXML(seatActivity + discussionActivity);
 };
 
@@ -148,29 +151,6 @@ const tcpServer = net.createServer(client => {
 tcpServer.listen(20000, () => {
   console.log("🚀 TCP Server running on port 20000");
 });
-
-
-// const tcpClient = net.createConnection({ host: "10.115.206.37", port: 20000 }, () => {
-//   console.log("✅ Connected to Telematics Camera Controller");
-//   tcpClient.write(lastMicStatus);
-//   console.log("📤 Sent XML Data");
-// });
-
-// tcpClient.on("error", (err) => {
-//   console.error("❌ TCP Client Error:", err.message);
-//   setTimeout(() => {
-//     console.log("🔄 Retrying connection...");
-//     tcpClient.connect({ host: "10.115.206.37", port: 20000 });
-//   }, 5000); // Retry after 5 seconds
-// });
-// tcpClient.on("data", (data:any) => {
-//   console.log("📥 Received Response:", data.toString());
-// });
-
-// tcpClient.on("close", () => {
-//   console.log("❌ Connection Closed");
-// });
-
 
 // เริ่ม Elysia Server
 app.listen(3000, () => console.log('API Server listening on port 3000'));
