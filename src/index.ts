@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
+import createConnection from 'net';
 
 const apiHost = 'localhost:3001'; //10.115.206.10 - localhost:3001
 const Sid = '1ef3065c1850429d4e77563e4d3243da913a6adde0a136079b4ba1bce75aafa4cd56c8c1fc8e7e4e633789542206ad7b8c6ad93205deae9d9956be08e1b3b6ab'
@@ -21,20 +22,23 @@ const app = new Elysia();
 // ตัวแปรเก็บสถานะล่าสุด
 let lastMicStatus: string = '';
 
+function minifyXML(xml: string): string {
+  return xml.replace(/\s+/g, " ").trim(); // ลบช่องว่างและเว้นบรรทัด
+}
+
 
 const generateXML = () => {
   const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
   
   // Get only the latest active seat
   const latestSeat = seats[seats.length - 1];
-  const seatActivity = `
-<?xml version="1.0" encoding="utf-8"?>
+  const seatActivity = `4 ■<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
       <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
-const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
+const discussionActivity = `£ ■<?xml version="1.0" encoding="utf-8"?>
 <DiscussionActivity Version="1" TimeStamp="${new Date().toISOString()}" Topic="Discussion" Type="ActiveListUpdated">
   <Discussion Id="1">
     <ActiveList>
@@ -50,7 +54,7 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 </DiscussionActivity>
 `;
 
-  return seatActivity + '\n' + discussionActivity;
+  return minifyXML(seatActivity + discussionActivity);
 };
 
 // ฟังก์ชันดึงข้อมูลไมค์จาก API และอัปเดตฐานข้อมูล
@@ -92,7 +96,8 @@ const fetchMicStatus = async () => {
 
     // ส่งข้อมูลไปยัง TCP Clients
     clients.forEach(client => client.write(newXML));
-    console.log('🔄 Mic status updated, sending XML to TCP clients');
+
+    console.log(`🔄 Mic ID="${activeSeats[0].id}" status updated, sending XML to TCP clients`);
 
   } catch (error) {
     console.error('❌ Error fetching mic status:', error);
@@ -105,20 +110,53 @@ setInterval(fetchMicStatus, 1000);
 // API รับ XML ปัจจุบัน
 app.get('/mic/status', () => lastMicStatus || generateXML());
 
-// เริ่ม TCP Server
 const clients: net.Socket[] = [];
-const tcpServer = net.createServer(client => {
-  clients.push(client);
-  console.log('New TCP client connected');
 
-  client.on('end', () => {
-    clients.splice(clients.indexOf(client), 1);
-  });
+const tcpServer = net.createServer(client => {
+  // ดึง IP และ Port ของ client
+  const clientAddress = `${client.remoteAddress}:${client.remotePort}`;
+
+  // เพิ่ม client ลงในรายการ
+  clients.push(client);
+  console.log(`✅ Client connected: ${clientAddress}`);
+  console.log(`🔹 Total clients: ${clients.length}`);
 
   // ส่ง XML ล่าสุดให้ client ใหม่ที่เชื่อมต่อ
   client.write(lastMicStatus || generateXML());
+
+  // กรณี client disconnect
+  client.on("end", () => {
+    clients.splice(clients.indexOf(client), 1);
+    console.log(`❌ Client disconnected: ${clientAddress}`);
+    console.log(`🔹 Total clients: ${clients.length}`);
+  });
+
+  // กรณี client มี error
+  client.on("error", (err) => {
+    console.error(`⚠️ Error on ${clientAddress}:`, err.message);
+  });
 });
-tcpServer.listen(20000, () => console.log('TCP Server listening on port 20000'));
+
+// เปิด TCP Server
+tcpServer.listen(20000, () => {
+  console.log("🚀 TCP Server running on port 20000");
+});
+
+
+const clients = createConnection({ host: "10.115.206.37", port: 20000 }, () => {
+  console.log("✅ Connected to Telematics Camera Controller");
+  clients.write(lastMicStatus);
+  console.log("📤 Sent XML Data");
+});
+
+clients.on("data", (data:any) => {
+  console.log("📥 Received Response:", data.toString());
+});
+
+clients.on("close", () => {
+  console.log("❌ Connection Closed");
+});
+
 
 // เริ่ม Elysia Server
 app.listen(3000, () => console.log('API Server listening on port 3000'));
