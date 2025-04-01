@@ -9,8 +9,10 @@
     "@types/xml": "^1.0.11",
     "axios": "^1.8.4",
     "elysia": "latest",
+    "fast-xml-parser": "^5.0.9",
     "net": "^1.0.2",
-    "xml": "^1.0.1"
+    "xml": "^1.0.1",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "bun-types": "latest"

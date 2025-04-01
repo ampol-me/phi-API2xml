@@ -22,7 +22,13 @@ const app = new Elysia();
 let lastMicStatus: string = '';
 
 function minifyXML(xml: string): string {
+
+  //return xml.split(/(?=<\?xml)/g).map(x => x.trim());
   return xml.replace(/\s+/g, " ").trim(); // ลบช่องว่างและเว้นบรรทัด
+}
+
+function splitXML(xml: string): string[] {
+  return xml.split(/(?=<\?xml)/g).map(x => x.trim()); // แยกแต่ละ XML และตัดช่องว่าง
 }
 
 const generateXML = () => {
@@ -58,8 +64,8 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 
 const testXml = `♣6♣<?xml version="1.0" encoding="utf-8"?><SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><Participant Id="0"><ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="O1522" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" /></Participant><IsReposnding>false</IsReposnding></Seat></SeatActivity>♥4       <?xml version="1.0" encoding="utf-8"?><DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated"><Discussion Id="80"><ActiveList><Participants><ParticipantContainer Id="0"><Seat Id="5691"><SeatData Name="A101" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="5842"><SeatData Name="F624" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6057"><SeatData Name="K1125" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer></Participants></ActiveList></Discussion></DiscussionActivity>`;
 
-  return testXml;       
-  //return minifyXML(seatActivity + discussionActivity);
+  //return testXml;       
+  return minifyXML(seatActivity + discussionActivity);
 };
 
 // ฟังก์ชันดึงข้อมูลไมค์จาก API และอัปเดตฐานข้อมูล
@@ -109,24 +115,24 @@ const fetchMicStatus = async () => {
   }
 };
 
-// เรียกใช้งาน fetchMicStatus ทุก 1 วินาที
 setInterval(fetchMicStatus, 1000);
 
-// API รับ XML ปัจจุบัน
 app.get('/mic/status', () => lastMicStatus || generateXML());
 
 const clients: net.Socket[] = [];
 
-const tcpServer = net.createServer(client => {
-  // ดึง IP และ Port ของ client
+
+
+const tcpServer = net.createServer((client) => {
+ 
   const clientAddress = `${client.remoteAddress}:${client.remotePort}`;
 
-  // เพิ่ม client ลงในรายการ
+
   clients.push(client);
   console.log(`✅ Client connected: ${clientAddress}`);
   console.log(`🔹 Total clients: ${clients.length}`);
 
-  // ส่ง XML ล่าสุดให้ client ใหม่ที่เชื่อมต่อ
+ 
   client.write(lastMicStatus || generateXML());
 
   client.on("data", (data: any) => {
@@ -141,7 +147,7 @@ const tcpServer = net.createServer(client => {
   });
 
   console.log(`🔹 Sending XML to ${clientAddress}: ${lastMicStatus || generateXML()}`);
-  // กรณี client มี error
+  
   client.on("error", (err) => {
     console.error(`⚠️ Error on ${clientAddress}:`, err.message);
   });
