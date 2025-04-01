@@ -42,3 +42,4 @@ package-lock.json
 **/*.bun
 *.db
 mic_control.db
+src/index.ts
