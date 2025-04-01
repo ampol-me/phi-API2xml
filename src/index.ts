@@ -43,7 +43,7 @@ const generateXML = () => {
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
-      <SeatData Name="A${latestSeat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
+      <SeatData Name="A${latestSeat.seat_id.toString().padStart(1, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
@@ -52,8 +52,8 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
     <ActiveList>
       <Participants>${seats.map(seat => `
           <ParticipantContainer Id="${seat.seat_id.toString().padStart(1, '0')}">
-            <Seat Id="${seat.seat_id.toString().padStart(3, '0')}">
-              <SeatData Name="A${seat.seat_id.toString().padStart(3, '0')}" MicrophoneActive="true" />
+            <Seat Id="${seat.seat_id.toString().padStart(1, '0')}">
+              <SeatData Name="A${seat.seat_id.toString().padStart(1, '0')}" MicrophoneActive="true" />
             </Seat>
           </ParticipantContainer>`).join('')}
       </Participants>
