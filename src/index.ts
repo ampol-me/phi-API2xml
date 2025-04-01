@@ -22,8 +22,6 @@ const app = new Elysia();
 let lastMicStatus: string = '';
 
 function minifyXML(xml: string): string {
-
-  //return xml.split(/(?=<\?xml)/g).map(x => x.trim());
   return xml.replace(/\s+/g, " ").trim(); // ลบช่องว่างและเว้นบรรทัด
 }
 
@@ -43,7 +41,7 @@ const generateXML = () => {
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(4, '0')}">
-      <SeatData Name="${latestSeat.seat_id.toString().padStart(1, '0')}" MicrophoneActive="true" />
+      <SeatData Name="${latestSeat.seat_name.toString().padStart(1, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
@@ -53,7 +51,7 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
       <Participants>${seats.map(seat => `
           <ParticipantContainer Id="${seat.seat_id.toString().padStart(4, '0')}">
             <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
-              <SeatData Name="${seat.seat_id.toString().padStart(4, '0')}" MicrophoneActive="true" />
+              <SeatData Name="${seat.seat_name.toString().padStart(4, '0')}" MicrophoneActive="true" />
             </Seat>
           </ParticipantContainer>`).join('')}
       </Participants>
