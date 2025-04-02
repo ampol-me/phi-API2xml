@@ -1,5 +1,8 @@
 http://10.115.206.10/api/speakers
 
+
+http://10.115.206.10/REST_API.html#/
+
 Bosch-Sid : 88ea6b1d2e6d7375f1ee0e4c2750d2fe6ae45c7d4efe9d707564cf3eb593ab14f10b042f3b5f5b1b84366003de29fb14201271ac922a0e6fcc530e4a0a65def9
 
 [
