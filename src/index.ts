@@ -22,7 +22,10 @@ const app = new Elysia();
 let lastMicStatus: string = '';
 
 function minifyXML(xml: string): string {
-  return xml.replace(/\s+/g, " ").trim(); // ลบช่องว่างและเว้นบรรทัด
+  return xml
+    .replace(/>\s+</g, "><")
+    .replace(/\s+/g, " ") 
+    .trim();
 }
 
 function splitXML(xml: string): string[] {
@@ -85,8 +88,8 @@ const fetchMicStatus = async () => {
     // ตรวจสอบว่ามีการเปลี่ยนแปลงหรือไม่
     const hasChanged = JSON.stringify(currentSeats.sort()) !== JSON.stringify(newSeats.sort());
 
-    if (!hasChanged) {
-      return; // ไม่มีการเปลี่ยนแปลง ไม่ต้องอัปเดต XML หรือส่งให้ TCP Clients
+    if (!hasChanged || activeSeats.length === 0) {
+      return; // ไม่มีการเปลี่ยนแปลง หรือไม่มีไมค์เปิด ไม่ต้องอัปเดต XML หรือส่งให้ TCP Clients
     }
 
     // รีเซ็ตสถานะไมค์ทั้งหมดเป็นปิด
