@@ -74,9 +74,112 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
 
 const testXml = `♣6♣<?xml version="1.0" encoding="utf-8"?><SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><Participant Id="0"><ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="O1522" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" /></Participant><IsReposnding>false</IsReposnding></Seat></SeatActivity>♥4       <?xml version="1.0" encoding="utf-8"?><DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated"><Discussion Id="80"><ActiveList><Participants><ParticipantContainer Id="0"><Seat Id="5691"><SeatData Name="A101" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="5842"><SeatData Name="F624" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6057"><SeatData Name="K1125" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer><ParticipantContainer Id="0"><Seat Id="6251"><SeatData Name="O1522" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" /><IsReposnding>false</IsReposnding></Seat></ParticipantContainer></Participants></ActiveList></Discussion></DiscussionActivity>`;
 
+
+const t1 = `
+<?xml version="1.0" encoding="utf-8"?>
+<SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">
+    <Seat Id="5842">
+        <SeatData Name="0002" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+        <Participant Id="0">
+            <ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="0001" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" />
+        </Participant>
+        <IsReposnding>false</IsReposnding>
+    </Seat>
+</SeatActivity>
+<?xml version="1.0" encoding="utf-8"?>
+<DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated">
+    <Discussion Id="80">
+        <ActiveList>
+            <Participants>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5691">
+                        <SeatData Name="0001" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5842">
+                        <SeatData Name="0002" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="6057">
+                        <SeatData Name="0003" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="6251">
+                        <SeatData Name="0004" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+            </Participants>
+        </ActiveList>
+    </Discussion>
+</DiscussionActivity>
+`;
+
+const t2 = `
+<?xml version="1.0" encoding="utf-8"?>
+<SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">
+    <Seat Id="5842">
+        <SeatData Name="0002" MicrophoneActive="false" SeatType="Delegate" IsSpecialStation="false" />
+        <Participant Id="0">
+            <ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="0001" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" />
+        </Participant>
+        <IsReposnding>false</IsReposnding>
+    </Seat>
+</SeatActivity>
+<?xml version="1.0" encoding="utf-8"?>
+<DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated">
+    <Discussion Id="80">
+        <ActiveList>
+            <Participants>
+                <ParticipantContainer Id="0">
+                    <Seat Id="5691">
+                        <SeatData Name="0001" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="6057">
+                        <SeatData Name="0003" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+                <ParticipantContainer Id="0">
+                    <Seat Id="6251">
+                        <SeatData Name="0004" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>
+            </Participants>
+        </ActiveList>
+    </Discussion>
+</DiscussionActivity>
+`;
   //return testXml;
-  return minifyXML(seatActivity + discussionActivity);
+
+  let toggle = true; // Toggle to switch between t1 and t2
+
+// Switch the toggle every 5 seconds
+setInterval(() => {
+  toggle = !toggle;
+}, 5000);
+
+
+  return toggle ? minifyXML(t1) : minifyXML(t2);
+
+ // return minifyXML(seatActivity + discussionActivity);
 };
+
+
 
 // ฟังก์ชันดึงข้อมูลไมค์จาก API และอัปเดตฐานข้อมูล
 const fetchMicStatus = async () => {
