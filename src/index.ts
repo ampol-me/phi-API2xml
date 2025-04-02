@@ -164,8 +164,6 @@ const t2 = `
     </Discussion>
 </DiscussionActivity>
 `;
-  //return testXml;
-
    // Toggle between predefined XMLs (t1 and t2) every 5 seconds
    let toggle = true;
    setInterval(() => {
