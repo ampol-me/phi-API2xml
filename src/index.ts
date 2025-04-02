@@ -166,16 +166,14 @@ const t2 = `
 `;
   //return testXml;
 
-  let toggle = true; // Toggle to switch between t1 and t2
-
-// Switch the toggle every 5 seconds
-setInterval(() => {
-  toggle = !toggle;
-}, 5000);
-
-
-  return toggle ? minifyXML(t1) : minifyXML(t2);
-
+   // Toggle between predefined XMLs (t1 and t2) every 5 seconds
+   let toggle = true;
+   setInterval(() => {
+     toggle = !toggle;
+   }, 5000);
+ 
+   // Return minified XML based on toggle
+   return toggle ? minifyXML(t1) : minifyXML(t2);
  // return minifyXML(seatActivity + discussionActivity);
 };
 
