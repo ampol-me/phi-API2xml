@@ -43,24 +43,32 @@ const generateXML = () => {
   const formattedTimestamp = timestamp.toISOString().replace('Z', '+07:00');
   
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
-<SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
-    <Seat Id="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}">
-      <SeatData Name="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
+<SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">
+    ${latestSeat ? `
+    <Seat Id="${latestSeat.seat_id.toString().padStart(1, '0')}">
+      <SeatData Name="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+      <Participant Id="0">
+            <ParticipantData Present="false" VotingWeight="1" VotingAuthorisation="true" MicrophoneAuthorisation="true" FirstName="" MiddleName="" LastName="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}" Title="" Country="" RemainingSpeechTime="-1" SpeechTimerOnHold="false" />
+        </Participant>
+        <IsReposnding>false</IsReposnding>
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
-<DiscussionActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated">
-  <Discussion Id="1">
-    <ActiveList>
-      <Participants>${seats.map(seat => `
-          <ParticipantContainer Id="0">
-            <Seat Id="${seat.seat_id.toString().padStart(seatId_Digits, '0')}">
-              <SeatData Name="${seat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
-            </Seat>
-          </ParticipantContainer>`).join('')}
-      </Participants>
-    </ActiveList>
-  </Discussion>
+<DiscussionActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="${formattedTimestamp}" Topic="Discussion" Type="ActiveListUpdated">
+  <Discussion Id="80">
+        <ActiveList>
+            <Participants>${seats.map(seat => `
+                <ParticipantContainer Id="0">
+                    <Seat Id="${seat.seat_id.toString().padStart(1, '0')}">
+                        <SeatData Name="${seat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" SeatType="Delegate" IsSpecialStation="false" />
+                        <IsReposnding>false</IsReposnding>
+                    </Seat>
+                </ParticipantContainer>`).join('')}
+            </Participants>
+        </ActiveList>
+    </Discussion>
 </DiscussionActivity>
 `;
 
