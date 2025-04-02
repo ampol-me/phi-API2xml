@@ -3,7 +3,7 @@ import { Database } from 'bun:sqlite';
 import axios from 'axios';
 import net from 'net';
 
-const apiHost = 'localhost:3001'; //10.115.206.10 - localhost:3001
+const apiHost = '10.115.206.10'; //10.115.206.10 - localhost:3001
 const Sid = '1ef3065c1850429d4e77563e4d3243da913a6adde0a136079b4ba1bce75aafa4cd56c8c1fc8e7e4e633789542206ad7b8c6ad93205deae9d9956be08e1b3b6ab'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
@@ -33,6 +33,7 @@ const generateXML = () => {
   const seats = db.query('SELECT * FROM mic_status WHERE mic_active = 1').all();
   
   // Get only the latest active seat
+  const seatId_Digits = 4;
   const latestSeat = seats[seats.length - 1];
   const timestamp = new Date();
   timestamp.setHours(timestamp.getHours() + 7);
@@ -40,8 +41,8 @@ const generateXML = () => {
   
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
-    <Seat Id="${latestSeat.seat_id.toString().padStart(4, '0')}">
-      <SeatData Name="${latestSeat.seat_name.toString().padStart(1, '0')}" MicrophoneActive="true" />
+    <Seat Id="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}">
+      <SeatData Name="${latestSeat.seat_name.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
@@ -49,9 +50,9 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
   <Discussion Id="1">
     <ActiveList>
       <Participants>${seats.map(seat => `
-          <ParticipantContainer Id="${seat.seat_id.toString().padStart(4, '0')}">
-            <Seat Id="${seat.seat_id.toString().padStart(4, '0')}">
-              <SeatData Name="${seat.seat_name.toString().padStart(4, '0')}" MicrophoneActive="true" />
+          <ParticipantContainer Id="0">
+            <Seat Id="${seat.seat_id.toString().padStart(seatId_Digits, '0')}">
+              <SeatData Name="${seat.seat_name.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
             </Seat>
           </ParticipantContainer>`).join('')}
       </Participants>

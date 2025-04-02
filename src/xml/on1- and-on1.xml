@@ -35,7 +35,8 @@
             </Participants>
         </ActiveList>
     </Discussion>
-</DiscussionActivity>4 ■<?xml version="1.0" encoding="utf-8"?>
+</DiscussionActivity>
+4 ■<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1" TimeStamp="2025-03-28T10:50:36.6919625+07:00" Topic="Seat" Type="SeatUpdated">
     <Seat Id="5669">
