@@ -4,7 +4,7 @@ import axios from 'axios';
 import net from 'net';
 
 const apiHost = '10.115.206.10'; //10.115.206.10 - localhost:3001
-const Sid = '1ef3065c1850429d4e77563e4d3243da913a6adde0a136079b4ba1bce75aafa4cd56c8c1fc8e7e4e633789542206ad7b8c6ad93205deae9d9956be08e1b3b6ab'
+const Sid = '56300dbbf4a1b37dfa9ed84485bb784bbc0583375464cb61ad1552aba84376f29ba09ebb916d6d6acd886accdb8a9352f7a34778c7080def49aa26478f6ba0bf'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
 db.run(`
@@ -42,7 +42,7 @@ const generateXML = () => {
   const seatActivity = `<?xml version="1.0" encoding="utf-8"?>
 <SeatActivity Version="1" TimeStamp="${formattedTimestamp}" Topic="Seat" Type="SeatUpdated">${latestSeat ? `
     <Seat Id="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}">
-      <SeatData Name="${latestSeat.seat_name.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
+      <SeatData Name="${latestSeat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
     </Seat>` : ''}
 </SeatActivity>`; 
 const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
@@ -52,7 +52,7 @@ const discussionActivity = `<?xml version="1.0" encoding="utf-8"?>
       <Participants>${seats.map(seat => `
           <ParticipantContainer Id="0">
             <Seat Id="${seat.seat_id.toString().padStart(seatId_Digits, '0')}">
-              <SeatData Name="${seat.seat_name.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
+              <SeatData Name="${seat.seat_id.toString().padStart(seatId_Digits, '0')}" MicrophoneActive="true" />
             </Seat>
           </ParticipantContainer>`).join('')}
       </Participants>

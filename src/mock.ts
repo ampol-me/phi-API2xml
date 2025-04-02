@@ -1,45 +1,45 @@
 import { Elysia } from 'elysia';
 
-// const getRandomSeats = () => {
-//   const seatCount = Math.floor(Math.random() * 3) + 1; // 1-2 seats
-//   const seats = [];
-//   for (let i = 0; i < seatCount; i++) {
-//     const seatId = Math.floor(Math.random() * 100) + 1; // Seat 1-10
-//     seats.push({
-//       name: `Seat ${seatId}`,
-//       prio: false,
-//       prioOn: false,
-//       seatName: `Seat ${seatId}`,
-//       micOn: Math.random() < 0.5,
-//       id: seatId,
-//       participantId: Math.floor(Math.random() * 100000)
-//     });
-//   }
-//   return seats;
-// };
-
-const predefinedSeats = [
-  { name: "K1125", id: 6057 },
-  { name: "A101", id: 5691 },
-  { name: "F624", id: 5842 }
-];
-
 const getRandomSeats = () => {
-  const seatCount = Math.floor(Math.random() * 3) + 1; // 1-3 seats
+  const seatCount = Math.floor(Math.random() * 3) + 1; // 1-2 seats
   const seats = [];
   for (let i = 0; i < seatCount; i++) {
-    const randomSeat = predefinedSeats[Math.floor(Math.random() * predefinedSeats.length)];
+    const seatId = Math.floor(Math.random() * 100) + 1; // Seat 1-10
     seats.push({
-      ...randomSeat,
+      name: `Seat ${seatId}`,
       prio: false,
       prioOn: false,
-      seatName: randomSeat.name,
+      seatName: seatId,
       micOn: Math.random() < 0.5,
+      id: seatId,
       participantId: Math.floor(Math.random() * 100000)
     });
   }
   return seats;
 };
+
+// const predefinedSeats = [
+//   { name: "K1125", id: 6057 },
+//   { name: "A101", id: 5691 },
+//   { name: "F624", id: 5842 }
+// ];
+
+// const getRandomSeats = () => {
+//   const seatCount = Math.floor(Math.random() * 3) + 1; // 1-3 seats
+//   const seats = [];
+//   for (let i = 0; i < seatCount; i++) {
+//     const randomSeat = predefinedSeats[Math.floor(Math.random() * predefinedSeats.length)];
+//     seats.push({
+//       ...randomSeat,
+//       prio: false,
+//       prioOn: false,
+//       seatName: randomSeat.name,
+//       micOn: Math.random() < 0.5,
+//       participantId: Math.floor(Math.random() * 100000)
+//     });
+//   }
+//   return seats;
+// };
 
 
 
