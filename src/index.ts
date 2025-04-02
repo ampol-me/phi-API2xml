@@ -4,7 +4,7 @@ import axios from 'axios';
 import net from 'net';
 
 const apiHost = '10.115.206.10'; //10.115.206.10 - localhost:3001
-const Sid = '56300dbbf4a1b37dfa9ed84485bb784bbc0583375464cb61ad1552aba84376f29ba09ebb916d6d6acd886accdb8a9352f7a34778c7080def49aa26478f6ba0bf'
+const Sid = 'ad159c93cd2704d18faf6cabd26b6bed8d6ff6fc77a5ae94d28907dc292fa8a5eea14d9b6c2f07a4ca24e2ed39a34a2228557b88a25a4d90888e32c077b5ef55'
 // สร้าง Database SQLite
 const db = new Database('mic_control.db');
 db.run(`
