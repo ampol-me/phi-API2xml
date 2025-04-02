@@ -9,7 +9,7 @@ const getRandomSeats = () => {
       name: `Seat ${seatId}`,
       prio: false,
       prioOn: false,
-      seatName: seatId,
+      seatName: seatId.toString().padStart(4, '0'),
       micOn: Math.random() < 0.5,
       id: seatId,
       participantId: Math.floor(Math.random() * 100000)

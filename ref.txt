@@ -1,2 +1,47 @@
 อัปเดตค่า MicrophoneActive ใน SeatActivity
 ไมค์ 106
+
+
+add name="TcpIpActivityTraceListener" type="Bosch.Dcn.Ecpc.Server.Services.TraceListeners.TcpIpActivityTraceListener, Bosch.Dcn.Ecpc.Server.Services" ConnectionPort="20000" MaxQueuedItems="50, 500" />
+
+
+ <sharedListeners>
+      <!-- To fine tune tracing set (combinations of) the traceOutputOptions; i.e.
+           "DateTime"              = date time information of the trace
+           "ProcessId"             = process id of the process who generated the trace
+           "ThreadId"              = thread id of thread who generated the trace
+           "Timestamp"             = timestamp of the trace
+           "LogicalOperationStack" = represents the logical operation stack for the call context
+           "Callstack"             = dump containing stack trace information giving information
+                                     about the calls made around the trace.-->
+      <add name="EventLog" type="Bosch.Operational.Diagnostics.AppEventLogTraceListener, Bosch.Operational" initializeData="DCN-SW Server" applicationLog="DCN-SW Application Log">
+        <filter type="System.Diagnostics.EventTypeFilter" initializeData="Error" />
+      </add>
+      <add name="Console" type="System.Diagnostics.ConsoleTraceListener" initializeData="true" />
+      <!-- Cycle attribute of FileTraceListener
+           "Day"   = The destination file cycles each day within a month.
+                     This implies that there will be maximum 31 file created.
+           "Week"  = The destination file cycles each week within the year.
+                     This implies that there will be maximum 53 files created.
+           "Month" = The destination file cycles each month within the year.
+                     This implies that there will be maximum 12 files created.-->
+      <add name="LogFile" type="Bosch.Operational.Diagnostics.FileTraceListener, Bosch.Operational" initializeData="DCN-SW Server.log" traceOutputOptions="DateTime" cycle="Month" />
+      <add name="TcpIpActivityTraceListener" type="Bosch.Dcn.Ecpc.Server.Services.TraceListeners.TcpIpActivityTraceListener, Bosch.Dcn.Ecpc.Server.Services" ConnectionPort="20000" MaxQueuedItems="50, 500" />
+      <add name="TcpIpHdccActivityTraceListener" type="Bosch.Dcn.Ecpc.Server.Services.TraceListeners.TcpIpActivityTraceListener, Bosch.Dcn.Ecpc.Server.Services" ConnectionPort="20001" MaxQueuedItems="2, 50" ActivityTypeFilter="SeatUpdated, SystemStarted, SystemStopped" />
+      <add name="TcpIpWebCastActivityTraceListener" type="Bosch.Dcn.Ecpc.Server.Services.TraceListeners.TcpIpActivityTraceListener, Bosch.Dcn.Ecpc.Server.Services" ConnectionPort="20002" MaxQueuedItems="50, 500" ActivityTypeFilter="VotingStarted, VotingStopped, MeetingStarted, MeetingStopped, SeatUpdated, RequestListUpdated" />
+    </sharedListeners>
+  </system.diagnostics>
+  <userSettings>
+    <Bosch.Dcn.Ecpc.Server.Properties.Settings>
+      <setting name="MaxSQLConnectionRetries" serializeAs="String">
+        <value>5</value>
+      </setting>
+      <setting name="SQLRetryTimeout" serializeAs="String">
+        <value>30</value>
+      </setting>
+    </Bosch.Dcn.Ecpc.Server.Properties.Settings>
+  </userSettings>
+  <startup>
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.0" />
+  </startup>
+</configuration>
